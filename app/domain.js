@@ -133,17 +133,23 @@
 
   // ---- Expenses -----------------------------------------------------------
 
+  /** Error texts shown to the user when an expense is rejected. */
   const EXPENSE_ERRORS = Object.freeze({
-    amountInvalid: 'Amount must be a valid amount in euros greater than zero, e.g. 12.50',
-    categoryUnknown: 'Choose an existing category',
-    dateInvalid: 'Date must be a valid date',
+    amountInvalid: 'Expense amount must be a valid amount in euros, e.g. 12.50',
+    amountNotPositive: 'Expense amount must be greater than zero',
+    categoryUnknown: 'Please choose an existing category',
+    dateMissing: 'Please choose a date',
   });
 
-  /** Checks the expense rules. Returns an error text or null. */
+  /**
+   * Checks the expense rules: amount is integer cents greater than zero, the category exists,
+   * the date is a real calendar date. Returns an error text or null.
+   */
   function validateExpense(categories, { amount, categoryId, date }) {
-    if (!Number.isInteger(amount) || amount <= 0) return EXPENSE_ERRORS.amountInvalid;
+    if (!Number.isInteger(amount)) return EXPENSE_ERRORS.amountInvalid;
+    if (amount <= 0) return EXPENSE_ERRORS.amountNotPositive;
     if (!categories.some((c) => c.id === categoryId)) return EXPENSE_ERRORS.categoryUnknown;
-    if (!isIsoDate(date)) return EXPENSE_ERRORS.dateInvalid;
+    if (!isIsoDate(date)) return EXPENSE_ERRORS.dateMissing;
     return null;
   }
 

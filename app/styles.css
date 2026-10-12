@@ -47,6 +47,10 @@ section h2 { font-size: 1.25rem; margin: 24px 0 12px; }
   padding: 6px 10px; margin: -4px 0 16px; max-width: 32rem;
 }
 @media (prefers-color-scheme: dark) { .form-error { color: #ffb4ab; border-left-color: #ffb4ab; } }
+.form-hint {
+  color: #77776f; border-left: 3px solid rgba(127, 127, 127, 0.5);
+  padding: 6px 10px; margin: -4px 0 16px; max-width: 32rem;
+}
 .empty { color: #77776f; font-style: italic; }
 .data-table { width: 100%; border-collapse: collapse; }
 .category-table { max-width: 40rem; }

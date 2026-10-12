@@ -54,6 +54,11 @@
     }));
     // keep the user's choice; otherwise the first category is preselected
     if (categories.some((c) => c.id === previous)) select.value = previous;
+    // without categories no expense can be recorded: disable the form and say why
+    const noCategories = categories.length === 0;
+    select.disabled = noCategories;
+    byTestId('expense-add-button').disabled = noCategories;
+    byTestId('expense-hint').hidden = !noCategories;
   }
 
   function renderExpenses(state) {
