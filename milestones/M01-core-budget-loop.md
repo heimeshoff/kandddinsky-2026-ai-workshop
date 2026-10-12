@@ -31,6 +31,6 @@ month only. Expenses dated in another month are therefore not counted in what is
 - [x] 005 Reject invalid expenses
 - [x] 006 Show remaining and usage per category
 - [x] 007 Highlight categories that are over budget
-- [ ] 008 Show the monthly budget totals
+- [x] 008 Show the monthly budget totals
 
 ## Acceptance report

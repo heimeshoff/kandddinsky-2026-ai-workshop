@@ -232,11 +232,36 @@
     return isOverBudget(spentInMonth(expenses, category.id, month), category.budgeted);
   }
 
+  // ---- Monthly totals -----------------------------------------------------
+
+  /** Monthly budget: the sum (integer cents) of the budgeted amounts of all categories. */
+  function monthlyBudget(categories) {
+    return categories.reduce((sum, c) => sum + c.budgeted, 0);
+  }
+
+  /**
+   * Totals of the whole monthly budget for a month: monthly budget, total spent (sum of all categories'
+   * spent), total remaining (monthly budget − total spent), usage (same rounding and zero-budget rule as
+   * category usage) and whether total spent is over the monthly budget.
+   */
+  function totalsInMonth(categories, expenses, month) {
+    const budget = monthlyBudget(categories);
+    const spent = categories.reduce((sum, c) => sum + spentInMonth(expenses, c.id, month), 0);
+    return {
+      monthlyBudget: budget,
+      spent,
+      remaining: budget - spent,
+      usage: usagePercent(spent, budget),
+      overBudget: isOverBudget(spent, budget),
+    };
+  }
+
   return {
     APP_NAME, ERRORS, formatCents, formatEuro, parseAmount,
     findCategoryByName, validateCategory, addCategory, addCategoryFromInput,
     EXPENSE_ERRORS, isIsoDate, toIsoDate, monthOf, formatMonth,
     validateExpense, addExpense, addExpenseFromInput, expensesInMonth, spentInMonth,
     usagePercent, formatUsage, categoryInMonth, isOverBudget, isCategoryOverBudget,
+    monthlyBudget, totalsInMonth,
   };
 });

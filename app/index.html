@@ -13,6 +13,17 @@
       <p class="shown-month" data-testid="shown-month"></p>
     </header>
 
+    <section class="totals" data-testid="totals" data-over-budget="false" aria-labelledby="totals-heading">
+      <h2 id="totals-heading" class="visually-hidden">Monthly budget totals</h2>
+      <dl class="totals-grid">
+        <div><dt>Monthly budget</dt><dd data-testid="total-monthly-budget">€0.00</dd></div>
+        <div><dt>Total spent</dt><dd data-testid="total-spent">€0.00</dd></div>
+        <div class="total-remaining-box"><dt>Total remaining</dt><dd data-testid="total-remaining">€0.00</dd></div>
+        <div><dt>Usage</dt><dd data-testid="total-usage">–</dd></div>
+      </dl>
+      <p class="over-budget-badge totals-badge" data-testid="totals-over-budget" hidden>Over budget</p>
+    </section>
+
     <section class="categories" aria-labelledby="categories-heading">
       <h2 id="categories-heading">Categories</h2>
 

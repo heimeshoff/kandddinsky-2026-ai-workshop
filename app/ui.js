@@ -58,6 +58,18 @@
     byTestId('category-table').hidden = empty;
   }
 
+  function renderTotals(state) {
+    const totals = Budget.totalsInMonth(state.categories, state.expenses, state.shownMonth);
+    const container = byTestId('totals');
+    container.dataset.overBudget = String(totals.overBudget);
+    container.classList.toggle('over-budget', totals.overBudget);
+    byTestId('total-monthly-budget').textContent = Budget.formatEuro(totals.monthlyBudget);
+    byTestId('total-spent').textContent = Budget.formatEuro(totals.spent);
+    byTestId('total-remaining').textContent = Budget.formatEuro(totals.remaining);
+    byTestId('total-usage').textContent = Budget.formatUsage(totals.usage);
+    byTestId('totals-over-budget').hidden = !totals.overBudget;
+  }
+
   function renderCategorySelect(categories) {
     const select = byTestId('expense-category-select');
     const previous = select.value;
@@ -105,6 +117,7 @@
   function render(state) {
     byTestId('app-title').textContent = Budget.APP_NAME;
     byTestId('shown-month').textContent = Budget.formatMonth(state.shownMonth);
+    renderTotals(state);
     renderCategories(state);
     renderCategorySelect(state.categories);
     renderExpenses(state);
