@@ -1,7 +1,7 @@
 ---
 id: M01
 title: Core budget loop for the current month
-status: planned
+status: in-progress
 ---
 ## Story
 As the user, I create categories, each with a budgeted amount, and record expenses against them (amount,
@@ -25,7 +25,7 @@ month only. Expenses dated in another month are therefore not counted in what is
 - All categories and expenses survive a page reload.
 
 ## Tasks
-- [ ] 002 Add a category with a budgeted amount
+- [x] 002 Add a category with a budgeted amount
 - [ ] 003 Reject invalid categories
 - [ ] 004 Record an expense and see it in the current month
 - [ ] 005 Reject invalid expenses

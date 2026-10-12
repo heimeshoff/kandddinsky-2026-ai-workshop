@@ -19,5 +19,43 @@
     return `${sign}${whole}.${frac}`;
   }
 
-  return { APP_NAME, formatCents };
+  /** Formats integer cents as euros, e.g. 30000 -> "€300.00", -2000 -> "-€20.00". */
+  function formatEuro(cents) {
+    const text = formatCents(cents);
+    return text.startsWith('-') ? `-€${text.slice(1)}` : `€${text}`;
+  }
+
+  /**
+   * Parses user input like "300", "120.50" or "12,5" into integer cents (string-based, exact).
+   * Accepts "." or "," as decimal separator, at most 2 decimals, an optional leading "-".
+   * Returns null when the input is not an amount.
+   */
+  function parseAmount(input) {
+    if (typeof input !== 'string') return null;
+    const m = /^(-?)(\d+)(?:[.,](\d{1,2}))?$/.exec(input.trim());
+    if (!m) return null;
+    const cents = Number(m[2]) * 100 + Number((m[3] || '').padEnd(2, '0'));
+    return m[1] === '-' && cents !== 0 ? -cents : cents;
+  }
+
+  /** Next free category id ("c1", "c2", …), never reusing an id already in the list. */
+  function nextCategoryId(categories) {
+    const max = categories.reduce((acc, c) => {
+      const n = Number(String(c.id).replace(/^c/, ''));
+      return Number.isInteger(n) && n > acc ? n : acc;
+    }, 0);
+    return `c${max + 1}`;
+  }
+
+  /**
+   * Returns a new category list with a category appended (creation order).
+   * The name is trimmed; budgeted is the budgeted amount in integer cents.
+   */
+  function addCategory(categories, name, budgeted) {
+    if (!Number.isInteger(budgeted)) throw new TypeError('budgeted must be integer cents');
+    const category = { id: nextCategoryId(categories), name: String(name).trim(), budgeted };
+    return [...categories, category];
+  }
+
+  return { APP_NAME, formatCents, formatEuro, parseAmount, addCategory };
 });
