@@ -1,4 +1,29 @@
-:root { --bg: #f7f6f2; --ink: #1d1d1b; }
+:root { --bg: #f7f6f2; --ink: #1d1d1b; --button-bg: #2e7d32; --button-bg-hover: #1b5e20; --button-ink: #fff; }
 @media (prefers-color-scheme: dark) { :root { --bg: #161614; --ink: #ecebe6; } }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, sans-serif; }
 main { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
+
+/* All buttons share one look: green background, white text (about 5.1 : 1 contrast). */
+button, input[type="button"], input[type="submit"], input[type="reset"] {
+  background-color: var(--button-bg);
+  color: var(--button-ink);
+  border: 1px solid var(--button-bg);
+  border-radius: 6px;
+  padding: 6px 14px;
+  font: inherit;
+  cursor: pointer;
+}
+button:hover:not(:disabled), input[type="button"]:hover:not(:disabled),
+input[type="submit"]:hover:not(:disabled), input[type="reset"]:hover:not(:disabled) {
+  background-color: var(--button-bg-hover);
+  border-color: var(--button-bg-hover);
+}
+button:focus-visible, input[type="button"]:focus-visible,
+input[type="submit"]:focus-visible, input[type="reset"]:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+button:disabled, input[type="button"]:disabled, input[type="submit"]:disabled, input[type="reset"]:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
