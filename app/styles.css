@@ -38,6 +38,11 @@ button:disabled, input[type="button"]:disabled, input[type="submit"]:disabled, i
   font: inherit; padding: 6px 8px; border: 1px solid #8a8a85; border-radius: 6px;
   background: transparent; color: var(--ink); min-width: 12rem;
 }
+.form-error {
+  color: #b3261e; background: rgba(179, 38, 30, 0.08); border-left: 3px solid #b3261e;
+  padding: 6px 10px; margin: -4px 0 16px; max-width: 32rem;
+}
+@media (prefers-color-scheme: dark) { .form-error { color: #ffb4ab; border-left-color: #ffb4ab; } }
 .empty { color: #77776f; font-style: italic; }
 .category-table { width: 100%; max-width: 32rem; border-collapse: collapse; }
 .category-table th, .category-table td { padding: 6px 8px; border-bottom: 1px solid rgba(127, 127, 127, 0.3); text-align: left; }

@@ -47,15 +47,58 @@
     return `c${max + 1}`;
   }
 
+  /** Error texts shown to the user when a category is rejected. */
+  const ERRORS = Object.freeze({
+    nameEmpty: 'Category name must not be empty',
+    nameTaken: (existingName) => `A category named "${existingName}" already exists`,
+    budgetNegative: 'Budgeted amount must be zero or more',
+    budgetInvalid: 'Budgeted amount must be a valid amount in euros, e.g. 300 or 12.50',
+  });
+
+  /** Finds a category by name, ignoring upper/lower case and surrounding spaces. */
+  function findCategoryByName(categories, name) {
+    const key = String(name).trim().toLowerCase();
+    return categories.find((c) => c.name.trim().toLowerCase() === key) || null;
+  }
+
+  /**
+   * Checks the category rules: name not empty, name unique (ignoring case),
+   * budgeted amount integer cents and zero or more. Returns an error text or null.
+   */
+  function validateCategory(categories, name, budgeted) {
+    const trimmed = typeof name === 'string' ? name.trim() : '';
+    if (trimmed === '') return ERRORS.nameEmpty;
+    const existing = findCategoryByName(categories, trimmed);
+    if (existing) return ERRORS.nameTaken(existing.name);
+    if (!Number.isInteger(budgeted)) return ERRORS.budgetInvalid;
+    if (budgeted < 0) return ERRORS.budgetNegative;
+    return null;
+  }
+
   /**
    * Returns a new category list with a category appended (creation order).
    * The name is trimmed; budgeted is the budgeted amount in integer cents.
+   * Throws when the category breaks a rule (see validateCategory).
    */
   function addCategory(categories, name, budgeted) {
-    if (!Number.isInteger(budgeted)) throw new TypeError('budgeted must be integer cents');
-    const category = { id: nextCategoryId(categories), name: String(name).trim(), budgeted };
+    const error = validateCategory(categories, name, budgeted);
+    if (error) throw new Error(error);
+    const category = { id: nextCategoryId(categories), name: name.trim(), budgeted };
     return [...categories, category];
   }
 
-  return { APP_NAME, formatCents, formatEuro, parseAmount, addCategory };
+  /**
+   * Adds a category from what the user typed (amount as text, e.g. "300" or "12,50").
+   * Returns { categories, error }: on success error is null; on rejection categories is the unchanged list.
+   */
+  function addCategoryFromInput(categories, name, amountText) {
+    const error = validateCategory(categories, name, parseAmount(amountText));
+    if (error) return { categories, error };
+    return { categories: addCategory(categories, name, parseAmount(amountText)), error: null };
+  }
+
+  return {
+    APP_NAME, ERRORS, formatCents, formatEuro, parseAmount,
+    findCategoryByName, validateCategory, addCategory, addCategoryFromInput,
+  };
 });

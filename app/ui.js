@@ -40,6 +40,12 @@
     byTestId('category-table').hidden = empty;
   }
 
+  function showCategoryError(message) {
+    const error = byTestId('category-error');
+    error.textContent = message || '';
+    error.hidden = !message;
+  }
+
   function render(state) {
     byTestId('app-title').textContent = Budget.APP_NAME;
     renderCategories(state.categories);
@@ -51,10 +57,10 @@
     event.preventDefault();
     const nameInput = byTestId('category-name-input');
     const budgetInput = byTestId('category-budget-input');
-    const budgeted = Budget.parseAmount(budgetInput.value);
-    // Validation messages come with task 003; until then invalid input is simply ignored.
-    if (budgeted === null || nameInput.value.trim() === '') return;
-    state.categories = Budget.addCategory(state.categories, nameInput.value, budgeted);
+    const result = Budget.addCategoryFromInput(state.categories, nameInput.value, budgetInput.value);
+    showCategoryError(result.error);
+    if (result.error) return; // keep the input so the user can correct it
+    state.categories = result.categories;
     save(state);
     render(state);
     nameInput.value = '';
