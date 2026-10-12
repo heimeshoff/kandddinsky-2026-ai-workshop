@@ -8,12 +8,15 @@
 </head>
 <body>
   <main>
-    <h1 data-testid="app-title">Budget</h1>
+    <header class="app-header">
+      <h1 data-testid="app-title">Budget</h1>
+      <p class="shown-month" data-testid="shown-month"></p>
+    </header>
 
     <section class="categories" aria-labelledby="categories-heading">
       <h2 id="categories-heading">Categories</h2>
 
-      <form class="category-form" data-testid="category-form" novalidate>
+      <form class="entry-form category-form" data-testid="category-form" novalidate>
         <label>
           <span>Name</span>
           <input type="text" data-testid="category-name-input" placeholder="e.g. Groceries" autocomplete="off">
@@ -27,11 +30,44 @@
       <p class="form-error" data-testid="category-error" role="alert" hidden></p>
 
       <p class="empty" data-testid="category-empty">No categories yet</p>
-      <table class="category-table" data-testid="category-table">
+      <table class="data-table category-table" data-testid="category-table">
         <thead>
-          <tr><th scope="col">Category</th><th scope="col" class="amount">Budgeted</th></tr>
+          <tr><th scope="col">Category</th><th scope="col" class="amount">Budgeted</th><th scope="col" class="amount">Spent</th></tr>
         </thead>
         <tbody data-testid="category-list"></tbody>
+      </table>
+    </section>
+
+    <section class="expenses" aria-labelledby="expenses-heading">
+      <h2 id="expenses-heading">Expenses</h2>
+
+      <form class="entry-form" data-testid="expense-form" novalidate>
+        <label>
+          <span>Amount (€)</span>
+          <input type="text" inputmode="decimal" data-testid="expense-amount-input" placeholder="e.g. 45.50" autocomplete="off">
+        </label>
+        <label>
+          <span>Category</span>
+          <select data-testid="expense-category-select"></select>
+        </label>
+        <label>
+          <span>Date</span>
+          <input type="date" data-testid="expense-date-input">
+        </label>
+        <label>
+          <span>Note (optional)</span>
+          <input type="text" data-testid="expense-note-input" placeholder="e.g. Weekly shop" autocomplete="off">
+        </label>
+        <button type="submit" data-testid="expense-add-button">Add expense</button>
+      </form>
+      <p class="form-error" data-testid="expense-error" role="alert" hidden></p>
+
+      <p class="empty" data-testid="expense-empty">No expenses this month</p>
+      <table class="data-table expense-table" data-testid="expense-table">
+        <thead>
+          <tr><th scope="col">Date</th><th scope="col">Category</th><th scope="col" class="amount">Amount</th><th scope="col">Note</th></tr>
+        </thead>
+        <tbody data-testid="expense-list"></tbody>
       </table>
     </section>
   </main>

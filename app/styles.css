@@ -31,19 +31,25 @@ button:disabled, input[type="button"]:disabled, input[type="submit"]:disabled, i
 [hidden] { display: none !important; }
 
 /* Categories */
-.categories h2 { font-size: 1.25rem; margin: 24px 0 12px; }
-.category-form { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 16px; }
-.category-form label { display: flex; flex-direction: column; gap: 4px; font-size: 0.875rem; }
-.category-form input {
+.app-header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+.shown-month { margin: 0; font-size: 1.25rem; font-weight: 600; }
+section h2 { font-size: 1.25rem; margin: 24px 0 12px; }
+.entry-form { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 16px; }
+.entry-form label { display: flex; flex-direction: column; gap: 4px; font-size: 0.875rem; }
+.entry-form input, .entry-form select {
   font: inherit; padding: 6px 8px; border: 1px solid #8a8a85; border-radius: 6px;
   background: transparent; color: var(--ink); min-width: 12rem;
 }
+.entry-form input[type="date"] { min-width: 0; }
+.entry-form select option { background: var(--bg); color: var(--ink); }
 .form-error {
   color: #b3261e; background: rgba(179, 38, 30, 0.08); border-left: 3px solid #b3261e;
   padding: 6px 10px; margin: -4px 0 16px; max-width: 32rem;
 }
 @media (prefers-color-scheme: dark) { .form-error { color: #ffb4ab; border-left-color: #ffb4ab; } }
 .empty { color: #77776f; font-style: italic; }
-.category-table { width: 100%; max-width: 32rem; border-collapse: collapse; }
-.category-table th, .category-table td { padding: 6px 8px; border-bottom: 1px solid rgba(127, 127, 127, 0.3); text-align: left; }
-.category-table .amount { text-align: right; font-variant-numeric: tabular-nums; }
+.data-table { width: 100%; border-collapse: collapse; }
+.category-table { max-width: 40rem; }
+.data-table th, .data-table td { padding: 6px 8px; border-bottom: 1px solid rgba(127, 127, 127, 0.3); text-align: left; }
+.data-table .amount { text-align: right; font-variant-numeric: tabular-nums; }
+.expense-table [data-testid="expense-date"] { font-variant-numeric: tabular-nums; white-space: nowrap; }

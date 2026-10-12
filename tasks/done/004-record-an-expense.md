@@ -42,5 +42,45 @@ another month are recorded but neither listed nor counted. Everything survives a
 - Out of scope: validation errors (task 005), editing/deleting expenses, remaining/usage (task 006).
 
 ## Implementation log
+### Round 1 — 2026-10-12
+- `app/domain.js`: added `isIsoDate`, `toIsoDate` (local date → "YYYY-MM-DD"), `monthOf` ("YYYY-MM"),
+  `formatMonth` ("October 2026"), `validateExpense`, `addExpense` (immutable, ids "e1", "e2", … referencing the
+  category by id, note trimmed, '' when absent), `addExpenseFromInput` (reuses `parseAmount`; returns
+  `{ expenses, error }`), `expensesInMonth` (newest date first, same date → higher id first) and `spentInMonth`.
+  Rules enforced: amount integer cents > 0, category must exist, date must be a real calendar date.
+- `app/ui.js`: state gains `expenses` (persisted in the same `budget-app-v1` key; `load()` defaults to `[]`) and
+  a non-persisted `shownMonth` = month of today, used for all month computations so switching can be added later.
+  Renders `shown-month`, the category select (creation order, first preselected, keeps the user's choice across
+  re-renders), the expense list and `category-spent` per category row. After a successful add amount and note
+  are cleared, category and date keep their values.
+- `app/index.html`: header with `shown-month`; "Spent" column in the category table; new Expenses section with
+  form and table. `app/styles.css`: shared `.entry-form` / `.data-table` styles (category form/table now use them).
+- Assumption: invalid expense input (validation is task 005) is not silently dropped — the domain error is shown
+  in a provisional `expense-error` element and the inputs are kept. Task 005 may replace texts/behaviour.
+- Coverage:
+  - AC1 → tests/acceptance/004-record-an-expense.spec.js "AC1: with empty storage the app shows October 2026, …"
+  - AC2 → "AC2: recording 45.50 for Groceries with a note shows one expense-row and adds to category-spent"
+  - AC3 → "AC3: two expenses are listed newest date first and summed per category"
+  - AC4 → "AC4: expenses dated in another month are neither listed nor counted"
+  - AC5 → "AC5: expenses survive a page reload and only the shown month is listed"
+  - Domain incl. month boundaries (2026-09-30, 2026-10-01, 2026-10-31, 2026-11-01) → tests/unit/004-record-an-expense.test.js
 ## Test report
+### Round 1 — 2026-10-12 — PASS
+
+VERDICT: PASS
+NPM_TEST: unit 28/28 pass; acceptance 21 passed (5 new for 004, all earlier green)
+CRITERIA:
+| AC | Verdict | Evidence |
+|----|---------|----------|
+| AC1 | PASS | probe: clock 2026-10-12T10:00, empty storage → shown-month "October 2026", expense-date-input "2026-10-12", expense-empty "No expenses this month"; 2026-10-01T00:05 local → "2026-10-01" (no UTC off-by-one) |
+| AC2 | PASS | probe: 45.50 / Groceries / today / "Weekly shop" → 1 row with all fields; Groceries spent €45.50, Transport €0.00; amount+note cleared, category+date kept |
+| AC3 | PASS | probe: 45.50 today + 12,30 on 2026-10-03 (Enter) → 2 rows newest first, empty note shown empty, Groceries €57.80; 0.10+0.20 → €0.30 |
+| AC4 | PASS | probe: 2026-09-30, 2026-11-01, 2025-10-12 not listed/counted; 2026-10-01 and 2026-10-31 counted; stored as integer cents with categoryId |
+| AC5 | PASS | probe: scenario then reload → one row €45.50 "Weekly shop", Groceries €45.50, no console errors; task-002-era storage loads cleanly |
+OBSERVATIONS:
+1. Invalid expense input is rejected with a provisional expense-error and nothing stored; task 005 may replace the texts.
+2. Unit tests cover month boundaries 09-30, 10-01, 10-31, 11-01.
+3. Vocabulary matches purpose.md.
+
 ## Ratification
+2026-10-12 — ratified by /build: all 5 criteria PASS (tester round 1).

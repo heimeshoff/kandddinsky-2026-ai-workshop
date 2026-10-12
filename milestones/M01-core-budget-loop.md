@@ -27,7 +27,7 @@ month only. Expenses dated in another month are therefore not counted in what is
 ## Tasks
 - [x] 002 Add a category with a budgeted amount
 - [x] 003 Reject invalid categories
-- [ ] 004 Record an expense and see it in the current month
+- [x] 004 Record an expense and see it in the current month
 - [ ] 005 Reject invalid expenses
 - [ ] 006 Show remaining and usage per category
 - [ ] 007 Highlight categories that are over budget
