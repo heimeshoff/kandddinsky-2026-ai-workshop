@@ -222,11 +222,21 @@
     return { spent, remaining: category.budgeted - spent, usage: usagePercent(spent, category.budgeted) };
   }
 
+  /** Over budget: spent is greater than the budgeted amount (spent equal to budgeted is not over budget). */
+  function isOverBudget(spent, budgeted) {
+    return spent > budgeted;
+  }
+
+  /** Whether a category is over budget in a month. */
+  function isCategoryOverBudget(category, expenses, month) {
+    return isOverBudget(spentInMonth(expenses, category.id, month), category.budgeted);
+  }
+
   return {
     APP_NAME, ERRORS, formatCents, formatEuro, parseAmount,
     findCategoryByName, validateCategory, addCategory, addCategoryFromInput,
     EXPENSE_ERRORS, isIsoDate, toIsoDate, monthOf, formatMonth,
     validateExpense, addExpense, addExpenseFromInput, expensesInMonth, spentInMonth,
-    usagePercent, formatUsage, categoryInMonth,
+    usagePercent, formatUsage, categoryInMonth, isOverBudget, isCategoryOverBudget,
   };
 });

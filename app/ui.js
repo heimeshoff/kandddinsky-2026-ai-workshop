@@ -32,12 +32,24 @@
       row.dataset.testid = 'category-row';
       row.dataset.categoryId = category.id;
       const { spent, remaining, usage } = Budget.categoryInMonth(category, expenses, shownMonth);
+      const overBudget = Budget.isOverBudget(spent, category.budgeted);
+      row.dataset.overBudget = String(overBudget);
+      row.classList.toggle('over-budget', overBudget);
+      const statusCell = cell('category-status', '', 'status');
+      if (overBudget) {
+        const badge = document.createElement('span');
+        badge.dataset.testid = 'category-over-budget';
+        badge.className = 'over-budget-badge';
+        badge.textContent = 'Over budget';
+        statusCell.append(badge);
+      }
       row.append(
         cell('category-name', category.name),
         cell('category-budgeted', Budget.formatEuro(category.budgeted), 'amount'),
         cell('category-spent', Budget.formatEuro(spent), 'amount'),
         cell('category-remaining', Budget.formatEuro(remaining), 'amount'),
         cell('category-usage', Budget.formatUsage(usage), 'amount'),
+        statusCell,
       );
       return row;
     }));
