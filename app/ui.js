@@ -31,10 +31,13 @@
       const row = document.createElement('tr');
       row.dataset.testid = 'category-row';
       row.dataset.categoryId = category.id;
+      const { spent, remaining, usage } = Budget.categoryInMonth(category, expenses, shownMonth);
       row.append(
         cell('category-name', category.name),
         cell('category-budgeted', Budget.formatEuro(category.budgeted), 'amount'),
-        cell('category-spent', Budget.formatEuro(Budget.spentInMonth(expenses, category.id, shownMonth)), 'amount'),
+        cell('category-spent', Budget.formatEuro(spent), 'amount'),
+        cell('category-remaining', Budget.formatEuro(remaining), 'amount'),
+        cell('category-usage', Budget.formatUsage(usage), 'amount'),
       );
       return row;
     }));

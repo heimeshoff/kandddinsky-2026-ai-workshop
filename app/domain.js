@@ -196,10 +196,37 @@
       .reduce((sum, e) => sum + e.amount, 0);
   }
 
+  // ---- Remaining and usage ------------------------------------------------
+
+  /**
+   * Usage: spent as a whole percent of the budgeted amount (both integer cents), rounded half up,
+   * computed with integers only. Returns null when the budgeted amount is 0 (usage is not defined).
+   */
+  function usagePercent(spent, budgeted) {
+    if (budgeted === 0) return null;
+    // round(spent * 100 / budgeted) half up == floor((2 * spent * 100 + budgeted) / (2 * budgeted))
+    return Math.floor((200 * spent + budgeted) / (2 * budgeted));
+  }
+
+  /** Usage as shown to the user: "19%", or an en dash when there is no usage. */
+  function formatUsage(usage) {
+    return usage === null ? '–' : `${usage}%`;
+  }
+
+  /**
+   * Spent, remaining (budgeted − spent, negative when over budget) and usage of a category
+   * in a month. Amounts in integer cents, usage in whole percent or null.
+   */
+  function categoryInMonth(category, expenses, month) {
+    const spent = spentInMonth(expenses, category.id, month);
+    return { spent, remaining: category.budgeted - spent, usage: usagePercent(spent, category.budgeted) };
+  }
+
   return {
     APP_NAME, ERRORS, formatCents, formatEuro, parseAmount,
     findCategoryByName, validateCategory, addCategory, addCategoryFromInput,
     EXPENSE_ERRORS, isIsoDate, toIsoDate, monthOf, formatMonth,
     validateExpense, addExpense, addExpenseFromInput, expensesInMonth, spentInMonth,
+    usagePercent, formatUsage, categoryInMonth,
   };
 });
