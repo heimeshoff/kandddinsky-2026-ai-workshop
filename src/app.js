@@ -3,6 +3,7 @@ import { createCategoryStore } from './categories.js';
 import { createExpenseStore } from './expenses.js';
 import { createBudgetStore } from './budgets.js';
 import { formatEur } from './money.js';
+import { budgetWarning } from './warning.js';
 
 const store = createIncomeStore(localStorage);
 const shown = document.getElementById('income');
@@ -49,7 +50,14 @@ function renameRow(name) {
   li.append(inp, ' ', save, ' ', cancel, ' ', err);
   return li;
 }
+const warningBox = document.getElementById('budget-warning');
+const renderWarning = () => {
+  const lines = budgetWarning(store.month(), categories.list(), expenses, budgets);
+  warningBox.hidden = lines.length === 0;
+  warningBox.replaceChildren(...lines.map((l) => Object.assign(document.createElement('li'), { textContent: l })));
+};
 const renderCategories = () => {
+  renderWarning();
   const avg = expenses.averageByCategory(categories.list());
   const proj = expenses.projectedByCategory(store.month(), categories.list());
   catList.replaceChildren(...expenses.spentByCategory(store.month(), categories.list()).map(({ name, cents }, i) => {
