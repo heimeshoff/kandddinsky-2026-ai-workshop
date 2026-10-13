@@ -48,6 +48,11 @@ export function createExpenseStore(storage, today = new Date()) {
       storage.setItem(KEY, JSON.stringify(all));
       return { ok: true };
     },
+    // Spent per given category name in the month; categories without expenses get 0.
+    spentByCategory: (month, names) => names.map((name) => ({
+      name,
+      cents: inMonth(month).filter((e) => e.category === name).reduce((s, e) => s + e.cents, 0),
+    })),
     spentCents: (month) => inMonth(month).reduce((s, e) => s + e.cents, 0),
   };
 }

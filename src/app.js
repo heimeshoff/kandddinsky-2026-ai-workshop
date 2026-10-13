@@ -21,15 +21,16 @@ document.getElementById('income-form').addEventListener('submit', (e) => {
   render();
 });
 
+const expenses = createExpenseStore(localStorage);
 const categories = createCategoryStore(localStorage);
 const catList = document.getElementById('category-list');
 const catInput = document.getElementById('category-input');
 const catError = document.getElementById('category-error');
 
 const renderCategories = () => {
-  catList.replaceChildren(...categories.list().map((name) => {
+  catList.replaceChildren(...expenses.spentByCategory(store.month(), categories.list()).map(({ name, cents }) => {
     const li = document.createElement('li');
-    li.textContent = name;
+    li.textContent = `${name}: ${formatEur(cents)}`;
     return li;
   }));
 };
@@ -42,9 +43,7 @@ document.getElementById('category-form').addEventListener('submit', (e) => {
   renderCategories();
   renderCategoryOptions();
 });
-renderCategories();
 
-const expenses = createExpenseStore(localStorage);
 const expList = document.getElementById('expense-list');
 const spent = document.getElementById('spent');
 const expAmount = document.getElementById('expense-amount');
@@ -57,6 +56,7 @@ expDate.value = expenses.defaultDate();
 function renderExpenses() {
   const month = store.month();
   spent.textContent = formatEur(expenses.spentCents(month));
+  renderCategories();
   expList.replaceChildren(...expenses.list(month).map((e, i) => {
     const li = document.createElement('li');
     li.textContent = `${formatEur(e.cents)} ${e.category} ${e.date}${e.note ? ' ' + e.note : ''}`;

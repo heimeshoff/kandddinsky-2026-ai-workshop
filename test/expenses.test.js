@@ -52,6 +52,16 @@ test('corrupt storage falls back to empty', () => {
   const st = memory(); st.setItem('budget.expenses', '{oops');
   assert.deepEqual(mk(st).list('2026-10'), []);
 });
+test('spent per category sums the month, zero for none', () => {
+  const s = mk();
+  s.add({ amount: '54.20', category: 'Food', date: '2026-10-05' });
+  s.add({ amount: '30', category: 'Food', date: '2026-10-06' });
+  s.add({ amount: '800', category: 'Rent', date: '2026-10-01' });
+  s.add({ amount: '9', category: 'Insurance', date: '2026-09-30' });
+  assert.deepEqual(s.spentByCategory('2026-10', ['Food', 'Rent', 'Insurance']),
+    [{ name: 'Food', cents: 8420 }, { name: 'Rent', cents: 80000 }, { name: 'Insurance', cents: 0 }]);
+  assert.equal(s.spentByCategory('2026-09', ['Food'])[0].cents, 0);
+});
 
 const bad = (input) => {
   const s = mk();
