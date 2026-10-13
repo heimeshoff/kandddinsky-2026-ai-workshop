@@ -52,3 +52,29 @@ test('corrupt storage falls back to empty', () => {
   const st = memory(); st.setItem('budget.expenses', '{oops');
   assert.deepEqual(mk(st).list('2026-10'), []);
 });
+test('delete removes the chosen expense; spent updates', () => {
+  const s = mk();
+  s.add({ amount: '54.20', category: 'Food', date: '2026-10-05' });
+  s.add({ amount: '800', category: 'Rent', date: '2026-10-01' });
+  assert.deepEqual(s.remove('2026-10', 0), { ok: true });
+  assert.deepEqual(s.list('2026-10').map((e) => e.cents), [80000]);
+  assert.equal(s.spentCents('2026-10'), 80000);
+});
+test('delete one of two identical expenses leaves one', () => {
+  const s = mk();
+  for (let i = 0; i < 2; i++) s.add({ amount: '5', category: 'Food', date: '2026-10-05', note: 'x' });
+  s.remove('2026-10', 1);
+  assert.equal(s.list('2026-10').length, 1);
+});
+test('delete persists across reload', () => {
+  const st = memory();
+  mk(st).add({ amount: '5', category: 'Food', date: '2026-10-05' });
+  mk(st).remove('2026-10', 0);
+  assert.deepEqual(mk(st).list('2026-10'), []);
+});
+test('delete with unknown position changes nothing', () => {
+  const s = mk();
+  s.add({ amount: '5', category: 'Food', date: '2026-10-05' });
+  assert.deepEqual(s.remove('2026-10', 3), { ok: false });
+  assert.equal(s.list('2026-10').length, 1);
+});

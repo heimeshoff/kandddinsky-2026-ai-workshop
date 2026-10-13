@@ -14,6 +14,10 @@ export function createExpenseStore(storage, today = new Date()) {
     } catch { return []; }
   };
   const inMonth = (month) => load().filter((e) => e.date.slice(0, 7) === month);
+  const sortedEntries = (month) => load()
+    .map((e, i) => [e, i])
+    .filter(([e]) => e.date.slice(0, 7) === month)
+    .sort(([a, i], [b, j]) => (a.date < b.date ? 1 : a.date > b.date ? -1 : i - j));
   return {
     defaultDate: () => isoDate(today),
     add({ amount, category, date, note }) {
@@ -26,10 +30,16 @@ export function createExpenseStore(storage, today = new Date()) {
       return { ok: true };
     },
     // Newest date first; same date keeps entry order.
-    list: (month) => inMonth(month)
-      .map((e, i) => [e, i])
-      .sort(([a, i], [b, j]) => (a.date < b.date ? 1 : a.date > b.date ? -1 : i - j))
-      .map(([e]) => e),
+    list: (month) => sortedEntries(month).map(([e]) => e),
+    // Removes exactly one expense: the one at `position` in list(month).
+    remove(month, position) {
+      const hit = sortedEntries(month)[position];
+      if (!hit) return { ok: false };
+      const all = load();
+      all.splice(hit[1], 1);
+      storage.setItem(KEY, JSON.stringify(all));
+      return { ok: true };
+    },
     spentCents: (month) => inMonth(month).reduce((s, e) => s + e.cents, 0),
   };
 }

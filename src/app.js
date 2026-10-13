@@ -57,9 +57,14 @@ expDate.value = expenses.defaultDate();
 function renderExpenses() {
   const month = store.month();
   spent.textContent = formatEur(expenses.spentCents(month));
-  expList.replaceChildren(...expenses.list(month).map((e) => {
+  expList.replaceChildren(...expenses.list(month).map((e, i) => {
     const li = document.createElement('li');
     li.textContent = `${formatEur(e.cents)} ${e.category} ${e.date}${e.note ? ' ' + e.note : ''}`;
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.textContent = 'Delete';
+    del.addEventListener('click', () => { expenses.remove(month, i); renderExpenses(); });
+    li.append(' ', del);
     return li;
   }));
 }
