@@ -1,4 +1,5 @@
 import { createIncomeStore } from './income.js';
+import { createCategoryStore } from './categories.js';
 
 const store = createIncomeStore(localStorage);
 const shown = document.getElementById('income');
@@ -18,3 +19,25 @@ document.getElementById('income-form').addEventListener('submit', (e) => {
   render();
 });
 render();
+
+const categories = createCategoryStore(localStorage);
+const catList = document.getElementById('category-list');
+const catInput = document.getElementById('category-input');
+const catError = document.getElementById('category-error');
+
+const renderCategories = () => {
+  catList.replaceChildren(...categories.list().map((name) => {
+    const li = document.createElement('li');
+    li.textContent = name;
+    return li;
+  }));
+};
+
+document.getElementById('category-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const r = categories.add(catInput.value);
+  catError.textContent = r.ok ? '' : r.error;
+  if (r.ok) catInput.value = '';
+  renderCategories();
+});
+renderCategories();
