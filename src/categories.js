@@ -19,5 +19,11 @@ export function createCategoryStore(storage) {
       storage.setItem(KEY, JSON.stringify([...list, clean]));
       return { ok: true };
     },
+    remove(name) {
+      const list = load();
+      if (!list.includes(name)) return { ok: false };
+      storage.setItem(KEY, JSON.stringify(list.filter((c) => c !== name)));
+      return { ok: true };
+    },
   };
 }

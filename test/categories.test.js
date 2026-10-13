@@ -45,3 +45,18 @@ test('corrupt storage falls back to empty', () => {
   const st = memory(); st.setItem('budget.categories', '{oops');
   assert.deepEqual(createCategoryStore(st).list(), []);
 });
+
+test('remove deletes the category and survives reload', () => {
+  const st = memory();
+  const s = createCategoryStore(st);
+  s.add('Food'); s.add('Travel');
+  assert.deepEqual(s.remove('Travel'), { ok: true });
+  assert.deepEqual(createCategoryStore(st).list(), ['Food']);
+  assert.equal(s.remove('Nope').ok, false);
+});
+test('re-adding a removed category works', () => {
+  const s = createCategoryStore(memory());
+  s.add('Food'); s.remove('Food');
+  assert.deepEqual(s.add('Food'), { ok: true });
+  assert.deepEqual(s.list(), ['Food']);
+});

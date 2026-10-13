@@ -233,3 +233,19 @@ test('editing one of two identical expenses changes only that one', () => {
 test('edit of unknown position fails', () => {
   assert.equal(seed().update('2026-10', 5, exp0).ok, false);
 });
+
+test('removeByCategory deletes its expenses in all months, keeps others', async () => {
+  const m = new Map();
+  const st = { getItem: k => m.has(k) ? m.get(k) : null, setItem: (k, v) => m.set(k, v) };
+  const s = createExpenseStore(st, new Date('2026-10-15'));
+  for (const [c, d] of [['Food', '2026-09-03'], ['Food', '2026-10-01'], ['Food', '2026-10-02'], ['Rent', '2026-10-01']])
+    s.add({ amount: '10', category: c, date: d });
+  assert.equal(s.countByCategory('Food'), 3);
+  s.removeByCategory('Food');
+  assert.equal(s.countByCategory('Food'), 0);
+  assert.equal(s.spentCents('2026-10'), 1000);
+  assert.equal(s.spentCents('2026-09'), 0);
+  assert.equal(s.averageByCategory(['Food'])[0].display, '–');
+  s.removeByCategory('Food');
+  assert.equal(s.countByCategory('Rent'), 1);
+});

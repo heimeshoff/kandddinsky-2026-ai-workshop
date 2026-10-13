@@ -65,6 +65,12 @@ export function createExpenseStore(storage, today = new Date()) {
       storage.setItem(KEY, JSON.stringify(all));
       return { ok: true };
     },
+    countByCategory: (name) => load().filter((e) => e.category === name).length,
+    // Deletes all expenses of the category, in every month.
+    removeByCategory(name) {
+      storage.setItem(KEY, JSON.stringify(load().filter((e) => e.category !== name)));
+      return { ok: true };
+    },
     // Spent per given category name in the month; categories without expenses get 0.
     spentByCategory: (month, names) => names.map((name) => ({
       name,

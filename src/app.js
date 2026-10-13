@@ -32,9 +32,25 @@ const renderCategories = () => {
   catList.replaceChildren(...expenses.spentByCategory(store.month(), categories.list()).map(({ name, cents }, i) => {
     const li = document.createElement('li');
     li.textContent = `${name}: ${formatEur(cents)} (average ${avg[i].display})`;
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.textContent = 'Delete';
+    del.setAttribute('aria-label', `Delete category ${name}`);
+    del.addEventListener('click', () => deleteCategory(name));
+    li.append(' ', del);
     return li;
   }));
 };
+
+function deleteCategory(name) {
+  const n = expenses.countByCategory(name);
+  if (n > 0 && !confirm(`Deleting "${name}" will also delete ${n} expense${n === 1 ? '' : 's'}. Continue?`)) return;
+  expenses.removeByCategory(name);
+  categories.remove(name);
+  editing = null;
+  renderCategoryOptions();
+  renderExpenses();
+}
 
 document.getElementById('category-form').addEventListener('submit', (e) => {
   e.preventDefault();
