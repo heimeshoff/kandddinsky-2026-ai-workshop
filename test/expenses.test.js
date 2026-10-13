@@ -71,18 +71,18 @@ const bad = (input) => {
   assert.deepEqual(s.list('2026-10'), []);
   assert.equal(s.spentCents('2026-10'), 0);
 };
-const base = { amount: '5', category: 'Food', date: '2026-10-05' };
+const orig = { amount: '5', category: 'Food', date: '2026-10-05' };
 for (const amount of ['0', '-5', 'abc', '', '12.345', '0.00']) {
-  test(`rejects amount "${amount}"`, () => bad({ ...base, amount }));
+  test(`rejects amount "${amount}"`, () => bad({ ...orig, amount }));
 }
-test('rejects missing category', () => bad({ ...base, category: '' }));
-test('rejects missing date', () => bad({ ...base, date: '' }));
-test('rejects invalid date', () => bad({ ...base, date: '2026-13-45' }));
-test('future date allowed', () => assert.equal(mk().add({ ...base, date: '2030-01-01' }).ok, true));
+test('rejects missing category', () => bad({ ...orig, category: '' }));
+test('rejects missing date', () => bad({ ...orig, date: '' }));
+test('rejects invalid date', () => bad({ ...orig, date: '2026-13-45' }));
+test('future date allowed', () => assert.equal(mk().add({ ...orig, date: '2030-01-01' }).ok, true));
 test('rejected input leaves existing data unchanged', () => {
   const s = mk();
-  s.add(base);
-  s.add({ ...base, amount: '0' });
+  s.add(orig);
+  s.add({ ...orig, amount: '0' });
   assert.equal(s.list('2026-10').length, 1);
   assert.equal(s.spentCents('2026-10'), 500);
 });
@@ -183,4 +183,53 @@ test('balance updates after new expense', () => {
   assert.equal(s.balance('2026-10', ['Food', 'Rent'], 250000).cents, before);
   add(s, '2026-10-06', '10', 'Other');
   assert.equal(s.balance('2026-10', ['Food', 'Rent', 'Other'], 250000).cents, before - 1000);
+});
+
+// edit
+const oct = (s) => s.list('2026-10');
+const exp0 = { amount: '54.20', category: 'Food', date: '2026-10-05', note: 'groceries' };
+const seed = () => { const s = mk(); s.add(exp0); return s; };
+test('edit amount updates list and spent', () => {
+  const s = seed();
+  assert.deepEqual(s.update('2026-10', 0, { ...exp0, amount: '45.20' }), { ok: true });
+  assert.equal(oct(s)[0].cents, 4520);
+  assert.equal(s.spentByCategory('2026-10', ['Food'])[0].cents, 4520);
+});
+test('edit category moves spent', () => {
+  const s = seed(); s.update('2026-10', 0, { ...exp0, category: 'Rent' });
+  assert.deepEqual(s.spentByCategory('2026-10', ['Food', 'Rent']).map((x) => x.cents), [0, 5420]);
+});
+test('edit note, and clearing it', () => {
+  const s = seed(); s.update('2026-10', 0, { ...exp0, note: 'market' });
+  assert.equal(oct(s)[0].note, 'market');
+  s.update('2026-10', 0, { ...exp0, note: '' });
+  assert.equal('note' in oct(s)[0], false);
+});
+test('edit date moves to another month', () => {
+  const s = seed(); s.update('2026-10', 0, { ...exp0, date: '2026-09-28' });
+  assert.equal(oct(s).length, 0);
+  assert.equal(s.list('2026-09').length, 1);
+  assert.equal(s.spentCents('2026-10'), 0);
+  assert.equal(s.spentCents('2026-09'), 5420);
+});
+test('invalid edits are rejected and leave expense unchanged', () => {
+  const s = seed();
+  for (const bad of [{ amount: '0' }, { amount: '-5' }, { amount: 'abc' }, { amount: '' }, { amount: '12.345' }, { category: '' }, { date: '' }]) {
+    const r = s.update('2026-10', 0, { ...exp0, ...bad });
+    assert.equal(r.ok, false); assert.ok(r.error);
+  }
+  assert.deepEqual(oct(s), [{ cents: 5420, category: 'Food', date: '2026-10-05', note: 'groceries' }]);
+});
+test('edit persists across store instances', () => {
+  const st = memory(); const s = mk(st);
+  s.add(exp0); s.update('2026-10', 0, { ...exp0, amount: '1' });
+  assert.equal(mk(st).list('2026-10')[0].cents, 100);
+});
+test('editing one of two identical expenses changes only that one', () => {
+  const s = mk(); s.add(exp0); s.add(exp0);
+  s.update('2026-10', 1, { ...exp0, amount: '1' });
+  assert.deepEqual(oct(s).map((e) => e.cents), [5420, 100]);
+});
+test('edit of unknown position fails', () => {
+  assert.equal(seed().update('2026-10', 5, exp0).ok, false);
 });

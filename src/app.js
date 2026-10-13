@@ -10,8 +10,8 @@ const error = document.getElementById('income-error');
 
 const label = document.getElementById('month');
 const render = () => { label.textContent = store.label(); shown.textContent = store.display(); renderExpenses(); };
-document.getElementById('prev-month').addEventListener('click', () => { store.previous(); error.textContent = ''; render(); });
-document.getElementById('next-month').addEventListener('click', () => { store.next(); error.textContent = ''; render(); });
+document.getElementById('prev-month').addEventListener('click', () => { editing = null; store.previous(); error.textContent = ''; render(); });
+document.getElementById('next-month').addEventListener('click', () => { editing = null; store.next(); error.textContent = ''; render(); });
 
 document.getElementById('income-form').addEventListener('submit', (e) => {
   e.preventDefault();
@@ -53,6 +53,8 @@ const expDate = document.getElementById('expense-date');
 const expNote = document.getElementById('expense-note');
 const expError = document.getElementById('expense-error');
 expDate.value = expenses.defaultDate();
+let editing = null; // { month, position } of the expense being edited
+const centsToText = (c) => (c / 100).toFixed(2);
 
 function renderExpenses() {
   const month = store.month();
@@ -66,14 +68,42 @@ function renderExpenses() {
   bEl.style.fontWeight = b.negative ? 'bold' : '';
   expList.replaceChildren(...expenses.list(month).map((e, i) => {
     const li = document.createElement('li');
+    if (editing && editing.month === month && editing.position === i) return editRow(e, month, i);
     li.textContent = `${formatEur(e.cents)} ${e.category} ${e.date}${e.note ? ' ' + e.note : ''}`;
+    const edit = document.createElement('button');
+    edit.type = 'button';
+    edit.textContent = 'Edit';
+    edit.addEventListener('click', () => { editing = { month, position: i }; renderExpenses(); });
     const del = document.createElement('button');
     del.type = 'button';
     del.textContent = 'Delete';
-    del.addEventListener('click', () => { expenses.remove(month, i); renderExpenses(); });
-    li.append(' ', del);
+    del.addEventListener('click', () => { editing = null; expenses.remove(month, i); renderExpenses(); });
+    li.append(' ', edit, ' ', del);
     return li;
   }));
+}
+function editRow(e, month, i) {
+  const li = document.createElement('li');
+  const field = (el, label) => { el.setAttribute('aria-label', label); return el; };
+  const amount = field(Object.assign(document.createElement('input'), { type: 'text', value: centsToText(e.cents) }), 'Edit amount');
+  const cat = field(document.createElement('select'), 'Edit category');
+  const names = categories.list().includes(e.category) ? categories.list() : [...categories.list(), e.category];
+  cat.replaceChildren(...names.map((n) => new Option(n, n)));
+  cat.value = e.category;
+  const date = field(Object.assign(document.createElement('input'), { type: 'date', value: e.date }), 'Edit date');
+  const note = field(Object.assign(document.createElement('input'), { type: 'text', value: e.note ?? '' }), 'Edit note');
+  const err = document.createElement('span');
+  err.setAttribute('role', 'alert');
+  const save = Object.assign(document.createElement('button'), { type: 'button', textContent: 'Save' });
+  save.addEventListener('click', () => {
+    const r = expenses.update(month, i, { amount: amount.value, category: cat.value, date: date.value, note: note.value });
+    if (!r.ok) { err.textContent = r.error; return; }
+    editing = null; renderExpenses();
+  });
+  const cancel = Object.assign(document.createElement('button'), { type: 'button', textContent: 'Cancel' });
+  cancel.addEventListener('click', () => { editing = null; renderExpenses(); });
+  li.append(amount, ' ', cat, ' ', date, ' ', note, ' ', save, ' ', cancel, ' ', err);
+  return li;
 }
 function renderCategoryOptions() {
   const current = expCategory.value;

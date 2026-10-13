@@ -25,17 +25,33 @@ export function createExpenseStore(storage, today = new Date()) {
     .map((e, i) => [e, i])
     .filter(([e]) => e.date.slice(0, 7) === month)
     .sort(([a, i], [b, j]) => (a.date < b.date ? 1 : a.date > b.date ? -1 : i - j));
+  const build = ({ amount, category, date, note }) => {
+    const cents = parseAmount(amount);
+    if (cents === null || cents === 0) return { ok: false, error: 'Enter an amount above 0 with at most 2 decimals.' };
+    if (typeof category !== 'string' || category.trim() === '') return { ok: false, error: 'Choose a category.' };
+    if (!validDate(date)) return { ok: false, error: 'Enter a date.' };
+    const clean = String(note ?? '').trim();
+    const expense = { cents, category, date };
+    if (clean !== '') expense.note = clean;
+    return { ok: true, expense };
+  };
   return {
     defaultDate: () => isoDate(today),
-    add({ amount, category, date, note }) {
-      const cents = parseAmount(amount);
-      if (cents === null || cents === 0) return { ok: false, error: 'Enter an amount above 0 with at most 2 decimals.' };
-      if (typeof category !== 'string' || category.trim() === '') return { ok: false, error: 'Choose a category.' };
-      if (!validDate(date)) return { ok: false, error: 'Enter a date.' };
-      const clean = String(note ?? '').trim();
-      const expense = { cents, category, date };
-      if (clean !== '') expense.note = clean;
-      storage.setItem(KEY, JSON.stringify([...load(), expense]));
+    add(fields) {
+      const r = build(fields);
+      if (!r.ok) return r;
+      storage.setItem(KEY, JSON.stringify([...load(), r.expense]));
+      return { ok: true };
+    },
+    // Replaces exactly one expense: the one at `position` in list(month). Invalid input leaves it unchanged.
+    update(month, position, fields) {
+      const hit = sortedEntries(month)[position];
+      if (!hit) return { ok: false, error: 'Expense not found.' };
+      const r = build(fields);
+      if (!r.ok) return r;
+      const all = load();
+      all[hit[1]] = r.expense;
+      storage.setItem(KEY, JSON.stringify(all));
       return { ok: true };
     },
     // Newest date first; same date keeps entry order.
