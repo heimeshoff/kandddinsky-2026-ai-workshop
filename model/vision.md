@@ -16,13 +16,13 @@ The user wants to know, at any point in the month:
 - Show spending per category for the month.
 - Show the average spending per category over past months.
 - Project the money left at month end.
+- Set a budget per category and warn when spent or projected (month and year) exceeds it.
 
 ## Out of scope
 - Multiple users, sharing, login.
 - Bank import, receipts scanning, sync.
 - Multiple currencies (everything in EUR).
 - Several incomes per month, savings goals, recurring-expense automation.
-- Budgets/limits per category (may come later).
 
 ## Constraints
 - Runs in the browser. Data stays on the device and survives a reload.
