@@ -99,6 +99,18 @@ export function createExpenseStore(storage, today = new Date()) {
         return { name, cents, display: formatEur(Math.round(cents)) };
       });
     },
+    // Projected spent per category: current month max(spent, average); no past months: spent.
+    // Past month: null display (not shown). Future month: "–".
+    projectedByCategory(month, names) {
+      const current = isoDate(today).slice(0, 7);
+      const avg = this.averageByCategory(names);
+      return this.spentByCategory(month, names).map(({ name, cents }, i) => {
+        if (month < current) return { name, cents: null, display: null };
+        if (month > current) return { name, cents: null, display: '–' };
+        const p = Math.round(Math.max(cents, avg[i].cents ?? 0));
+        return { name, cents: p, display: formatEur(p) };
+      });
+    },
     // Current month: projected balance = income - spent - expected rest. Past month: left = income - spent.
     // Future month: "–". Expected rest per category = max(0, average - spent this month).
     balance(month, names, incomeCents) {

@@ -262,3 +262,29 @@ test('removeByCategory deletes its expenses in all months, keeps others', async 
   s.removeByCategory('Food');
   assert.equal(s.countByCategory('Rent'), 1);
 });
+
+// projected spent per category
+test('projected spent = max(spent, average)', () => {
+  const s = mk(); food(s, '2026-09-10', '450'); food(s, '2026-10-02', '350');
+  assert.equal(s.spentByCategory('2026-10', ['Food'])[0].cents, 35000);
+  assert.equal(s.projectedByCategory('2026-10', ['Food'])[0].display, '450.00 €');
+  food(s, '2026-10-03', '150');
+  assert.equal(s.projectedByCategory('2026-10', ['Food'])[0].display, '500.00 €');
+});
+test('projected spent without past months equals spent', () => {
+  const s = mk(); food(s, '2026-10-02', '50');
+  assert.equal(s.projectedByCategory('2026-10', ['Food'])[0].display, '50.00 €');
+});
+test('projected spent: none for past month, dash for future month', () => {
+  const s = mk(); food(s, '2026-09-10', '450');
+  assert.equal(s.projectedByCategory('2026-09', ['Food'])[0].display, null);
+  assert.equal(s.projectedByCategory('2026-11', ['Food'])[0].display, '–');
+});
+test('projected spent updates after edit and delete', () => {
+  const s = mk(); food(s, '2026-09-10', '450'); food(s, '2026-10-02', '600');
+  assert.equal(s.projectedByCategory('2026-10', ['Food'])[0].cents, 60000);
+  s.update('2026-10', 0, { amount: '100', category: 'Food', date: '2026-10-02' });
+  assert.equal(s.projectedByCategory('2026-10', ['Food'])[0].cents, 45000);
+  s.remove('2026-10', 0);
+  assert.equal(s.projectedByCategory('2026-10', ['Food'])[0].cents, 45000);
+});

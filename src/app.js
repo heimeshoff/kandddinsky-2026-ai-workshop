@@ -48,10 +48,11 @@ function renameRow(name) {
 }
 const renderCategories = () => {
   const avg = expenses.averageByCategory(categories.list());
+  const proj = expenses.projectedByCategory(store.month(), categories.list());
   catList.replaceChildren(...expenses.spentByCategory(store.month(), categories.list()).map(({ name, cents }, i) => {
     const li = document.createElement('li');
     if (renamingCat === name) return renameRow(name);
-    li.textContent = `${name}: ${formatEur(cents)} (average ${avg[i].display}) `;
+    li.textContent = `${name}: ${formatEur(cents)} (average ${avg[i].display})${proj[i].display === null ? '' : `, projected ${proj[i].display}`} `;
     const btn = Object.assign(document.createElement('button'), { type: 'button', textContent: 'Rename' });
     btn.addEventListener('click', () => { renamingCat = name; renderCategories(); });
     li.append(btn);
