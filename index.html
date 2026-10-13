@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Household budget</title></head>
+<body>
+  <h1>Household budget</h1>
+  <p>Income this month: <strong id="income"></strong></p>
+  <form id="income-form">
+    <label>Income <input id="income-input" type="text" inputmode="decimal" autocomplete="off"></label>
+    <button type="submit">Set income</button>
+    <p id="income-error" role="alert"></p>
+  </form>
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>
