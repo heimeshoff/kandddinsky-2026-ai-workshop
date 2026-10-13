@@ -21,6 +21,17 @@
     <button type="submit">Add category</button>
     <p id="category-error" role="alert"></p>
   </form>
+  <h2>Expenses</h2>
+  <p>Spent: <strong id="spent"></strong></p>
+  <ul id="expense-list"></ul>
+  <form id="expense-form">
+    <label>Amount <input id="expense-amount" type="text" inputmode="decimal" autocomplete="off"></label>
+    <label>Category <select id="expense-category"></select></label>
+    <label>Date <input id="expense-date" type="date"></label>
+    <label>Note <input id="expense-note" type="text" autocomplete="off"></label>
+    <button type="submit">Add expense</button>
+    <p id="expense-error" role="alert"></p>
+  </form>
   <script type="module" src="src/app.js"></script>
 </body>
 </html>
