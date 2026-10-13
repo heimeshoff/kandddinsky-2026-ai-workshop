@@ -56,6 +56,8 @@ const renderWarning = () => {
   warningBox.hidden = lines.length === 0;
   warningBox.replaceChildren(...lines.map((l) => Object.assign(document.createElement('li'), { textContent: l })));
 };
+const span = (className, text) => Object.assign(document.createElement('span'), { className, textContent: text });
+const rowText = (...parts) => { const s = span('row-text', ''); s.append(...parts); return s; };
 const renderCategories = () => {
   renderWarning();
   const avg = expenses.averageByCategory(categories.list());
@@ -63,13 +65,17 @@ const renderCategories = () => {
   catList.replaceChildren(...expenses.spentByCategory(store.month(), categories.list()).map(({ name, cents }, i) => {
     const li = document.createElement('li');
     if (renamingCat === name) return renameRow(name);
-    li.textContent = `${name}: ${formatEur(cents)} (average ${avg[i].display})${proj[i].display === null ? '' : `, projected ${proj[i].display}`} `;
+    li.append(rowText(
+      span('name', name), ': ', span('amount', formatEur(cents)), ' ',
+      span('sub', `(average ${avg[i].display})${proj[i].display === null ? '' : `, projected ${proj[i].display}`}`), ' ',
+    ));
     const btn = Object.assign(document.createElement('button'), { type: 'button', textContent: 'Rename' });
     btn.addEventListener('click', () => { renamingCat = name; renderCategories(); });
     li.append(btn);
     const del = document.createElement('button');
     del.type = 'button';
     del.textContent = 'Delete';
+    del.className = 'del';
     del.setAttribute('aria-label', `Delete category ${name}`);
     del.addEventListener('click', () => deleteCategory(name));
     li.append(' ', del);
@@ -81,6 +87,7 @@ const renderCategories = () => {
 function budgetControls(name) {
   const month = store.month();
   const box = document.createElement('span');
+  box.className = 'budget';
   const inp = Object.assign(document.createElement('input'), { type: 'text' });
   inp.setAttribute('aria-label', `Budget for ${name}`);
   const err = document.createElement('span');
@@ -141,12 +148,11 @@ function renderExpenses() {
   document.getElementById('balance-label').textContent = b.kind === 'left' ? 'Left' : 'Projected balance';
   const bEl = document.getElementById('balance');
   bEl.textContent = b.display;
-  bEl.style.color = b.negative ? 'red' : '';
-  bEl.style.fontWeight = b.negative ? 'bold' : '';
+  document.getElementById('balance-tile').classList.toggle('neg', !!b.negative);
   expList.replaceChildren(...expenses.list(month).map((e, i) => {
     const li = document.createElement('li');
     if (editing && editing.month === month && editing.position === i) return editRow(e, month, i);
-    li.textContent = `${formatEur(e.cents)} ${e.category} ${e.date}${e.note ? ' ' + e.note : ''}`;
+    li.append(rowText(span('amount', formatEur(e.cents)), ' ', span('name', e.category), ' ', span('date', e.date), e.note ? ' ' + e.note : ''));
     const edit = document.createElement('button');
     edit.type = 'button';
     edit.textContent = 'Edit';
@@ -154,6 +160,7 @@ function renderExpenses() {
     const del = document.createElement('button');
     del.type = 'button';
     del.textContent = 'Delete';
+    del.className = 'del';
     del.addEventListener('click', () => { editing = null; expenses.remove(month, i); renderExpenses(); });
     li.append(' ', edit, ' ', del);
     return li;
