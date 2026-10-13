@@ -2,5 +2,11 @@
   "name": "household-budget",
   "private": true,
   "type": "module",
-  "scripts": { "test": "node --test \"test/*.test.js\"" }
+  "scripts": {
+    "test": "node --test \"test/*.test.js\"",
+    "test:browser": "node --test --test-concurrency=1 \"test/browser/*.test.js\""
+  },
+  "devDependencies": {
+    "playwright-core": "^1.56.1"
+  }
 }
