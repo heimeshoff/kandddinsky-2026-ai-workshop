@@ -29,7 +29,11 @@ export function createIncomeStore(storage, today = new Date()) {
     label: () => monthLabel(month),
     previous() { month = shiftMonth(month, -1); },
     next() { month = shiftMonth(month, 1); },
-    cents: () => load()[month] ?? 0,
+    cents() {
+      const incomes = load();
+      const latest = Object.keys(incomes).filter((k) => k <= month).sort().pop();
+      return latest === undefined ? 0 : incomes[latest];
+    },
     display() { return formatEur(this.cents()); },
     set(text) {
       const cents = parseAmount(text);

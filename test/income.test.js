@@ -63,7 +63,7 @@ test('each month has its own income', () => {
   s.set('2500'); s.previous(); s.set('2000');
   assert.equal(s.display(), '2,000.00 €');
   s.next(); assert.equal(s.display(), '2,500.00 €');
-  s.next(); assert.equal(s.display(), '0.00 €');
+  s.next(); assert.equal(s.display(), '2,500.00 €');
 });
 test('reload shows current month again', () => {
   const st = memory();
@@ -72,4 +72,35 @@ test('reload shows current month again', () => {
   const r = createIncomeStore(st, today);
   assert.equal(r.label(), 'October 2026');
   r.previous(); assert.equal(r.display(), '2,000.00 €');
+});
+
+const sep = () => { const st = memory(); const s = createIncomeStore(st, new Date(2026, 8, 1)); s.set('2500'); return { st, s }; };
+test('carries over to October and November', () => {
+  const { s } = sep();
+  s.next(); assert.equal(s.display(), '2,500.00 €');
+  s.next(); assert.equal(s.display(), '2,500.00 €');
+});
+test('changing October leaves September, changes November', () => {
+  const { s } = sep();
+  s.next(); s.set('2700');
+  s.previous(); assert.equal(s.display(), '2,500.00 €');
+  s.next(); s.next(); assert.equal(s.display(), '2,700.00 €');
+});
+test('no carry-over backwards', () => {
+  const s = createIncomeStore(memory(), new Date(2026, 9, 1));
+  s.set('2500'); s.previous();
+  assert.equal(s.display(), '0.00 €');
+});
+test('0 carries over', () => {
+  const { s } = sep();
+  s.next(); s.next(); s.set('0');
+  assert.equal(s.display(), '0.00 €');
+  s.next(); assert.equal(s.display(), '0.00 €');
+});
+test('carry-over survives reload', () => {
+  const { st, s } = sep();
+  s.next(); s.set('2700');
+  const r = createIncomeStore(st, new Date(2026, 8, 1));
+  assert.equal(r.display(), '2,500.00 €');
+  r.next(); r.next(); assert.equal(r.display(), '2,700.00 €');
 });
