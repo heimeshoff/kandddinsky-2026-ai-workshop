@@ -52,6 +52,30 @@ test('corrupt storage falls back to empty', () => {
   const st = memory(); st.setItem('budget.expenses', '{oops');
   assert.deepEqual(mk(st).list('2026-10'), []);
 });
+
+const bad = (input) => {
+  const s = mk();
+  const r = s.add(input);
+  assert.equal(r.ok, false);
+  assert.ok(r.error);
+  assert.deepEqual(s.list('2026-10'), []);
+  assert.equal(s.spentCents('2026-10'), 0);
+};
+const base = { amount: '5', category: 'Food', date: '2026-10-05' };
+for (const amount of ['0', '-5', 'abc', '', '12.345', '0.00']) {
+  test(`rejects amount "${amount}"`, () => bad({ ...base, amount }));
+}
+test('rejects missing category', () => bad({ ...base, category: '' }));
+test('rejects missing date', () => bad({ ...base, date: '' }));
+test('rejects invalid date', () => bad({ ...base, date: '2026-13-45' }));
+test('future date allowed', () => assert.equal(mk().add({ ...base, date: '2030-01-01' }).ok, true));
+test('rejected input leaves existing data unchanged', () => {
+  const s = mk();
+  s.add(base);
+  s.add({ ...base, amount: '0' });
+  assert.equal(s.list('2026-10').length, 1);
+  assert.equal(s.spentCents('2026-10'), 500);
+});
 test('delete removes the chosen expense; spent updates', () => {
   const s = mk();
   s.add({ amount: '54.20', category: 'Food', date: '2026-10-05' });

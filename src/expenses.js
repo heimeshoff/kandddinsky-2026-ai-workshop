@@ -5,6 +5,12 @@ const KEY = 'budget.expenses';
 const pad = (n) => String(n).padStart(2, '0');
 export const isoDate = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
+const validDate = (d) => {
+  if (typeof d !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(d)) return false;
+  const t = new Date(`${d}T00:00:00Z`);
+  return !Number.isNaN(t.getTime()) && t.toISOString().slice(0, 10) === d;
+};
+
 // Expenses persisted in the given storage; each belongs to the month of its date.
 export function createExpenseStore(storage, today = new Date()) {
   const load = () => {
@@ -23,6 +29,8 @@ export function createExpenseStore(storage, today = new Date()) {
     add({ amount, category, date, note }) {
       const cents = parseAmount(amount);
       if (cents === null || cents === 0) return { ok: false, error: 'Enter an amount above 0 with at most 2 decimals.' };
+      if (typeof category !== 'string' || category.trim() === '') return { ok: false, error: 'Choose a category.' };
+      if (!validDate(date)) return { ok: false, error: 'Enter a date.' };
       const clean = String(note ?? '').trim();
       const expense = { cents, category, date };
       if (clean !== '') expense.note = clean;

@@ -72,6 +72,9 @@ function renderCategoryOptions() {
   const current = expCategory.value;
   expCategory.replaceChildren(...categories.list().map((name) => new Option(name, name)));
   if (current) expCategory.value = current;
+  const none = categories.list().length === 0;
+  document.getElementById('expense-hint').hidden = !none;
+  document.getElementById('expense-submit').disabled = none;
 }
 
 document.getElementById('expense-form').addEventListener('submit', (e) => {
