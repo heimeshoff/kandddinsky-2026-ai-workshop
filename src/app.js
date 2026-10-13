@@ -1,6 +1,7 @@
 import { createIncomeStore } from './income.js';
 import { createCategoryStore } from './categories.js';
 import { createExpenseStore } from './expenses.js';
+import { createBudgetStore } from './budgets.js';
 import { formatEur } from './money.js';
 
 const store = createIncomeStore(localStorage);
@@ -23,6 +24,7 @@ document.getElementById('income-form').addEventListener('submit', (e) => {
 
 const expenses = createExpenseStore(localStorage);
 const categories = createCategoryStore(localStorage);
+const budgets = createBudgetStore(localStorage);
 const catList = document.getElementById('category-list');
 const catInput = document.getElementById('category-input');
 const catError = document.getElementById('category-error');
@@ -39,6 +41,7 @@ function renameRow(name) {
     const r = categories.rename(name, inp.value);
     if (!r.ok) { err.textContent = r.error; return; }
     expenses.renameCategory(name, r.name);
+    budgets.rename(name, r.name);
     renamingCat = null; renderExpenses(); renderCategoryOptions();
   });
   const cancel = Object.assign(document.createElement('button'), { type: 'button', textContent: 'Cancel' });
@@ -62,15 +65,41 @@ const renderCategories = () => {
     del.setAttribute('aria-label', `Delete category ${name}`);
     del.addEventListener('click', () => deleteCategory(name));
     li.append(' ', del);
+    li.append(' ', budgetControls(name));
     return li;
   }));
 };
+
+function budgetControls(name) {
+  const month = store.month();
+  const box = document.createElement('span');
+  const inp = Object.assign(document.createElement('input'), { type: 'text' });
+  inp.setAttribute('aria-label', `Budget for ${name}`);
+  const err = document.createElement('span');
+  err.setAttribute('role', 'alert');
+  const set = Object.assign(document.createElement('button'), { type: 'button', textContent: 'Set budget' });
+  set.addEventListener('click', () => {
+    const r = budgets.set(name, month, inp.value);
+    if (!r.ok) { err.textContent = r.error; return; }
+    renderCategories();
+  });
+  const rem = Object.assign(document.createElement('button'), { type: 'button', textContent: 'Remove budget' });
+  rem.setAttribute('aria-label', `Remove budget of ${name}`);
+  rem.addEventListener('click', () => { budgets.remove(name, month); renderCategories(); });
+  const label = document.createElement('span');
+  label.textContent = `Budget: ${budgets.display(name, month)} `;
+  box.append(label, inp, ' ', set);
+  if (budgets.cents(name, month) !== null) box.append(' ', rem);
+  box.append(' ', err);
+  return box;
+}
 
 function deleteCategory(name) {
   const n = expenses.countByCategory(name);
   if (n > 0 && !confirm(`Deleting "${name}" will also delete ${n} expense${n === 1 ? '' : 's'}. Continue?`)) return;
   expenses.removeByCategory(name);
   categories.remove(name);
+  budgets.removeCategory(name);
   editing = null;
   renderCategoryOptions();
   renderExpenses();
