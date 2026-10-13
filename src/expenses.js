@@ -1,6 +1,7 @@
-import { parseAmount } from './money.js';
+import { parseAmount, formatEur } from './money.js';
 
 const KEY = 'budget.expenses';
+const INCOME_KEY = 'budget.incomes';
 
 const pad = (n) => String(n).padStart(2, '0');
 export const isoDate = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -53,6 +54,24 @@ export function createExpenseStore(storage, today = new Date()) {
       name,
       cents: inMonth(month).filter((e) => e.category === name).reduce((s, e) => s + e.cents, 0),
     })),
+    // Average spent per category over past months (before today's month), relative to today.
+    // First past month = earliest month with an expense or own income. No past month: display "–".
+    averageByCategory(names) {
+      const current = isoDate(today).slice(0, 7);
+      let incomes = {};
+      try { incomes = JSON.parse(storage.getItem(INCOME_KEY)) ?? {}; } catch { /* none */ }
+      const all = load();
+      const first = [...all.map((e) => e.date.slice(0, 7)), ...Object.keys(incomes)].sort()[0];
+      const count = first === undefined || first >= current ? 0
+        : (Number(current.slice(0, 4)) - Number(first.slice(0, 4))) * 12 + Number(current.slice(5)) - Number(first.slice(5));
+      return names.map((name) => {
+        if (count === 0) return { name, cents: null, display: '–' };
+        const total = all.filter((e) => e.category === name && e.date.slice(0, 7) < current && e.date.slice(0, 7) >= first)
+          .reduce((s, e) => s + e.cents, 0);
+        const cents = total / count;
+        return { name, cents, display: formatEur(Math.round(cents)) };
+      });
+    },
     spentCents: (month) => inMonth(month).reduce((s, e) => s + e.cents, 0),
   };
 }

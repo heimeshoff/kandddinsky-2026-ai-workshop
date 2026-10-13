@@ -112,3 +112,31 @@ test('delete with unknown position changes nothing', () => {
   assert.deepEqual(s.remove('2026-10', 3), { ok: false });
   assert.equal(s.list('2026-10').length, 1);
 });
+
+const food = (s, d, a) => s.add({ amount: a, category: 'Food', date: d });
+test('average over past months, gaps count as 0', () => {
+  const s = mk(); food(s, '2026-07-10', '300'); food(s, '2026-09-10', '330');
+  assert.equal(s.averageByCategory(['Food'])[0].display, '210.00 €');
+});
+test('only current month data: average is dash', () => {
+  const s = mk(); food(s, '2026-10-02', '50');
+  assert.deepEqual(s.averageByCategory(['Food']).map((a) => a.display), ['–']);
+});
+test('current month does not change average', () => {
+  const s = mk(); food(s, '2026-09-10', '330'); const before = s.averageByCategory(['Food'])[0].display;
+  food(s, '2026-10-02', '999');
+  assert.equal(s.averageByCategory(['Food'])[0].display, before);
+});
+test('category without past expenses averages 0.00', () => {
+  const s = mk(); food(s, '2026-09-10', '330');
+  assert.equal(s.averageByCategory(['Food', 'Rent'])[1].display, '0.00 €');
+});
+test('average rounds to 2 decimals for display', () => {
+  const s = mk(); food(s, '2026-07-10', '100');
+  assert.equal(s.averageByCategory(['Food'])[0].display, '33.33 €');
+});
+test('own income month starts the past months', () => {
+  const st = memory(); st.setItem('budget.incomes', JSON.stringify({ '2026-08': 100 }));
+  const s = mk(st); food(s, '2026-09-10', '60');
+  assert.equal(s.averageByCategory(['Food'])[0].display, '30.00 €');
+});

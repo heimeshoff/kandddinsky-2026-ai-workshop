@@ -28,9 +28,10 @@ const catInput = document.getElementById('category-input');
 const catError = document.getElementById('category-error');
 
 const renderCategories = () => {
-  catList.replaceChildren(...expenses.spentByCategory(store.month(), categories.list()).map(({ name, cents }) => {
+  const avg = expenses.averageByCategory(categories.list());
+  catList.replaceChildren(...expenses.spentByCategory(store.month(), categories.list()).map(({ name, cents }, i) => {
     const li = document.createElement('li');
-    li.textContent = `${name}: ${formatEur(cents)}`;
+    li.textContent = `${name}: ${formatEur(cents)} (average ${avg[i].display})`;
     return li;
   }));
 };
