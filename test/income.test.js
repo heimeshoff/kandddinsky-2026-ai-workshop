@@ -41,3 +41,35 @@ test('corrupt storage falls back to 0', () => {
   const st = memory(); st.setItem('budget.incomes', '{oops');
   assert.equal(createIncomeStore(st, today).display(), '0.00 €');
 });
+
+test('opens on current month label', () =>
+  assert.equal(createIncomeStore(memory(), today).label(), 'October 2026'));
+test('previous / next month', () => {
+  const s = createIncomeStore(memory(), today);
+  s.previous(); assert.equal(s.label(), 'September 2026');
+  s.next(); s.next(); assert.equal(s.label(), 'November 2026');
+});
+test('year wraps both ways', () => {
+  const s = createIncomeStore(memory(), new Date(2026, 11, 5));
+  assert.equal(s.label(), 'December 2026');
+  s.next(); assert.equal(s.label(), 'January 2027');
+  s.previous(); s.previous(); s.previous(); s.previous(); s.previous(); s.previous(); s.previous(); s.previous(); s.previous(); s.previous(); s.previous(); s.previous();
+  assert.equal(s.label(), 'January 2026');
+  s.previous(); assert.equal(s.label(), 'December 2025');
+});
+test('each month has its own income', () => {
+  const st = memory();
+  const s = createIncomeStore(st, today);
+  s.set('2500'); s.previous(); s.set('2000');
+  assert.equal(s.display(), '2,000.00 €');
+  s.next(); assert.equal(s.display(), '2,500.00 €');
+  s.next(); assert.equal(s.display(), '0.00 €');
+});
+test('reload shows current month again', () => {
+  const st = memory();
+  const s = createIncomeStore(st, today);
+  s.previous(); s.set('2000');
+  const r = createIncomeStore(st, today);
+  assert.equal(r.label(), 'October 2026');
+  r.previous(); assert.equal(r.display(), '2,000.00 €');
+});

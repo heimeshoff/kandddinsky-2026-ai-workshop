@@ -5,7 +5,10 @@ const shown = document.getElementById('income');
 const input = document.getElementById('income-input');
 const error = document.getElementById('income-error');
 
-const render = () => { shown.textContent = store.display(); };
+const label = document.getElementById('month');
+const render = () => { label.textContent = store.label(); shown.textContent = store.display(); };
+document.getElementById('prev-month').addEventListener('click', () => { store.previous(); error.textContent = ''; render(); });
+document.getElementById('next-month').addEventListener('click', () => { store.next(); error.textContent = ''; render(); });
 
 document.getElementById('income-form').addEventListener('submit', (e) => {
   e.preventDefault();
