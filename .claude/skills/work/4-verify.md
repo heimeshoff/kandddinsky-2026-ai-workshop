@@ -1,28 +1,23 @@
-# 4. Verify
+# 4. Verify (subagent)
 
-Don't take the subagent's word for it. Work **inside the task's worktree**.
+Don't take the implementer's word for it — and don't check it yourself.
+Spawn one fresh `verifier` agent for the task, with
+`run_in_background: true`. The prompt is two absolute paths, nothing else:
 
-1. Commit the agent's work on its branch:
-   `git -C <worktree> add -A && git -C <worktree> commit -m "task NNN: wip"`.
-2. Bring in what other tasks merged meanwhile:
-   `git -C <worktree> merge master`. Resolve any conflicts here, in the
-   worktree — keep both tasks' behavior — and commit the merge.
-3. Run the full test suite in the worktree and check each acceptance
-   criterion is covered by a test (`git -C <worktree> diff master...`).
+```
+<main>/tasks/doing/NNN-slug.md
+<worktree>
+```
 
-- All green and covered → **Finish** (done).
-- Otherwise append the findings to `tasks/doing/NNN-slug.log.md`:
+The agent's rules live in `.claude/agents/verifier.md`. It commits the
+work, merges `master` into the branch, runs the tests and checks criteria
+coverage — all in the worktree. Findings go to the log, not to you. It
+returns one line (plus `Tried:` on `FAIL 2`):
 
-  ```markdown
-  ### Verify n
-  - Red: <failing test and why>
-  - Missing: <criterion without a test>
-  - Conflict: <files you could not merge cleanly, and why>
-  ```
-
-  `n` = number of existing `### Verify` headings + 1. Then go back to
-  **Implement** with a fresh agent in the same worktree — the log carries
-  the context.
-- If you just wrote `### Verify 2` → don't retry; treat as blocked.
+- `PASS` → **Finish** (done).
+- `FAIL 1: ...` → back to **Implement** with a fresh agent in the same
+  worktree — the log carries the context.
+- `FAIL 2: ...` → don't retry; **Finish** (blocked) with the summary as
+  the question and its `Tried:` line for the Notes.
 
 You keep no state between rounds; the log is the memory.

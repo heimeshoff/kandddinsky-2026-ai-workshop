@@ -7,7 +7,7 @@ For each picked task, **before** doing anything else:
 2. Create its worktree on a fresh branch from `master`, outside the repo:
 
    ```
-   git worktree add -b task/NNN-slug ../<repo>.worktrees/NNN-slug master
+   git worktree add -q -b task/NNN-slug ../<repo>.worktrees/NNN-slug master
    ```
 
    `<repo>` = name of this repo's folder. Each task gets its own folder

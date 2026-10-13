@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Task Board</title>
+<style>
+  :root {
+    --bg: #f6f5f2; --col: #ecebe6; --card: #fff; --text: #1d1d1b; --muted: #6b6a66;
+    --line: #dddcd6; --accent: #2f6fdf; --doing: #e08a1e; --done: #3a9b5c; --warn: #c8402f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #161615; --col: #1f1f1d; --card: #2a2a27; --text: #ecebe6; --muted: #9a9993;
+      --line: #3a3a36; --accent: #6b9cf5; --doing: #f0a54a; --done: #5cc183; --warn: #ef6b5a; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.4 system-ui, sans-serif; }
+  header { display: flex; align-items: center; gap: 12px; padding: 16px 20px; }
+  h1 { font-size: 18px; margin: 0; }
+  #status { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  #status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--warn); }
+  #status.live::before { background: var(--done); }
+  main { display: grid; grid-template-columns: repeat(4, minmax(220px, 1fr)); gap: 12px; padding: 0 20px 20px; overflow-x: auto; }
+  section { background: var(--col); border-radius: 10px; padding: 10px; min-height: 60vh; }
+  section h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted);
+    margin: 4px 4px 10px; display: flex; justify-content: space-between; }
+  section[data-state=doing] h2 { color: var(--doing); }
+  section[data-state=done] h2 { color: var(--done); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 10px; margin-bottom: 8px;
+    cursor: pointer; animation: pop .5s ease; }
+  .card.blocked { border-left: 3px solid var(--warn); }
+  section[data-state=doing] .card { border-left: 3px solid var(--doing); }
+  @keyframes pop { from { transform: scale(.96); box-shadow: 0 0 0 3px var(--accent); } to { transform: none; box-shadow: none; } }
+  .id { font: 600 11px ui-monospace, monospace; color: var(--muted); }
+  .title { font-weight: 600; margin: 2px 0 4px; }
+  .meta { font-size: 12px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; }
+  .meta .b { color: var(--warn); }
+  button { font: inherit; font-size: 12px; margin-top: 8px; padding: 4px 10px; border-radius: 6px; cursor: pointer;
+    border: 1px solid var(--accent); background: transparent; color: var(--accent); }
+  button:hover { background: var(--accent); color: var(--card); }
+  button:disabled { opacity: .5; cursor: wait; }
+  dialog { max-width: 720px; width: calc(100% - 32px); border: 1px solid var(--line); border-radius: 10px;
+    background: var(--card); color: var(--text); padding: 20px; }
+  dialog pre { white-space: pre-wrap; font: 13px/1.5 ui-monospace, monospace; margin: 0; }
+  #toast { position: fixed; bottom: 16px; right: 16px; background: var(--text); color: var(--bg); padding: 8px 14px;
+    border-radius: 8px; opacity: 0; transition: opacity .3s; }
+  #toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<header><h1>Task Board</h1><span id="status">connecting…</span></header>
+<main id="board"></main>
+<dialog id="detail"><pre></pre></dialog>
+<div id="toast"></div>
+<script>
+  const STATES = { backlog: 'Backlog', todo: 'To do', doing: 'Doing', done: 'Done' };
+  const boardEl = document.getElementById('board');
+  const status = document.getElementById('status');
+  const detail = document.getElementById('detail');
+  let seen = null; // file@state keys from the previous render, to animate only moved/new cards
+
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+
+  function card(state, t, isNew) {
+    const meta = [
+      t.dependsOn.length ? `needs ${t.dependsOn.join(', ')}` : '',
+      t.source ? `from ${esc(t.source)}` : '',
+      t.hasLog ? 'log' : '',
+      t.blocked ? `<span class="b">blocked: ${esc(t.blocked)}</span>` : '',
+    ].filter(Boolean).map(m => `<span>${m}</span>`).join('');
+    return `<div class="card${t.blocked ? ' blocked' : ''}" data-state="${state}" data-file="${esc(t.file)}"
+      style="${isNew ? '' : 'animation:none'}">
+      ${t.id ? `<div class="id">#${esc(t.id)}</div>` : ''}
+      <div class="title">${esc(t.title)}</div>
+      <div class="meta">${meta}</div>
+      ${state === 'backlog' ? '<button data-promote>Promote to To do</button>' : ''}
+    </div>`;
+  }
+
+  let board = {};
+  function render(data) {
+    board = data;
+    const now = new Set();
+    boardEl.innerHTML = Object.entries(STATES).map(([state, label]) => {
+      const tasks = [...data[state]];
+      if (state === 'done') tasks.reverse();
+      return `<section data-state="${state}"><h2><span>${label}</span><span>${tasks.length}</span></h2>
+        ${tasks.map(t => { const k = t.file + '@' + state; now.add(k); return card(state, t, seen && !seen.has(k)); }).join('')}
+      </section>`;
+    }).join('');
+    seen = now;
+  }
+
+  boardEl.addEventListener('click', async e => {
+    const el = e.target.closest('.card');
+    if (!el) return;
+    if (e.target.matches('[data-promote]')) {
+      e.target.disabled = true;
+      const r = await fetch('/promote/' + encodeURIComponent(el.dataset.file), { method: 'POST' }).then(r => r.json());
+      toast(r.ok ? `Promoted → todo/${r.file}` : `Failed: ${r.error}`);
+      return;
+    }
+    const t = board[el.dataset.state].find(t => t.file === el.dataset.file);
+    detail.querySelector('pre').textContent = `${el.dataset.state}/${t.file}\n\n${t.body}`;
+    detail.showModal();
+  });
+  detail.addEventListener('click', e => { if (e.target === detail) detail.close(); });
+
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg; el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2500);
+  }
+
+  const events = new EventSource('/events');
+  events.onopen = () => { status.textContent = 'live'; status.className = 'live'; };
+  events.onerror = () => { status.textContent = 'disconnected — retrying'; status.className = ''; };
+  events.onmessage = e => render(JSON.parse(e.data));
+</script>
+</body>
+</html>

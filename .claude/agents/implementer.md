@@ -50,13 +50,19 @@ Append to the log (create it if missing):
 - Decisions: stack choices, interpretations, trade-offs.
 - Open: anything unfinished or doubtful.
 - Where: the main files and tests for this task.
-- Backlog: <one line each> — anything you noticed that is out of scope
-  for this task but may be worth doing later. Omit if none.
+- Backlog: <title> — <why>
 ```
+
+`- Backlog:` = one line per item, repeat the prefix for each — anything
+you noticed that is out of scope for this task but may be worth doing
+later. Omit if none.
 
 `n` = number of existing `### Attempt` headings + 1. Keep it short.
 
 ## Return
-Exactly one line, nothing else:
+Exactly one line, nothing else (except `Tried:` when blocked):
 - `DONE`
 - `BLOCKED: <the precise question>`
+
+When blocked, add a second line: `Tried: <one short sentence of what you
+tried>` — the conductor copies it into the task's Notes.

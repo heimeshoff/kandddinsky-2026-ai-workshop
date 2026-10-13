@@ -12,9 +12,9 @@ any moment — that is expected.
 Read `tasks/README.md` first. It is the contract with the modeling session;
 follow its ownership, naming and git rules exactly.
 
-You are the **conductor**: you pick, claim, verify, merge, move and commit.
-The actual implementation of each task happens in a fresh subagent, so this
-session's context stays small no matter how many tasks go by.
+You are the **conductor**: you pick, claim, merge, move and commit.
+Implementation and verification of each task happen in fresh subagents,
+so this session's context stays small no matter how many tasks go by.
 
 All ready tasks run in parallel. Each gets its own git worktree and
 branch (`task/NNN-slug`), so agents never edit each other's files. You
@@ -29,7 +29,7 @@ that phase.
 1. **Pick** — `1-pick.md`
 2. **Claim** — `2-claim.md`
 3. **Implement** (subagent) — `3-implement.md`
-4. **Verify** — `4-verify.md`
+4. **Verify** (subagent) — `4-verify.md`
 5. **Finish** — `5-finish.md`
 6. **Repeat** — whenever a task finishes, go back to **Pick**. Re-read `tasks/README.md` and the
    glossary only if they changed since you last read them.
