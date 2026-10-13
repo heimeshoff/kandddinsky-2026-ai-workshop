@@ -54,6 +54,11 @@ export function createExpenseStore(storage, today = new Date()) {
       storage.setItem(KEY, JSON.stringify(all));
       return { ok: true };
     },
+    // Moves all expenses (every month) from one category name to another.
+    renameCategory(oldName, newName) {
+      const all = load().map((e) => (e.category === oldName ? { ...e, category: newName } : e));
+      storage.setItem(KEY, JSON.stringify(all));
+    },
     // Newest date first; same date keeps entry order.
     list: (month) => sortedEntries(month).map(([e]) => e),
     // Removes exactly one expense: the one at `position` in list(month).

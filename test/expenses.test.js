@@ -234,6 +234,19 @@ test('edit of unknown position fails', () => {
   assert.equal(seed().update('2026-10', 5, exp0).ok, false);
 });
 
+test('renameCategory moves expenses of all months', async () => {
+  const m = new Map();
+  const st = { getItem: k => m.has(k) ? m.get(k) : null, setItem: (k, v) => m.set(k, v) };
+  const s = createExpenseStore(st, new Date(2026, 9, 13));
+  s.add({ amount: '54,20', category: 'Fod', date: '2026-10-02' });
+  s.add({ amount: '10', category: 'Fod', date: '2026-09-02' });
+  s.add({ amount: '5', category: 'Rent', date: '2026-10-03' });
+  s.renameCategory('Fod', 'Food');
+  assert.equal(s.list('2026-09')[0].category, 'Food');
+  assert.equal(s.list('2026-10').filter(e => e.category === 'Food').length, 1);
+  assert.equal(s.spentByCategory('2026-10', ['Food', 'Fod', 'Rent'])[0].cents, 5420);
+  assert.equal(s.spentByCategory('2026-10', ['Fod'])[0].cents, 0);
+});
 test('removeByCategory deletes its expenses in all months, keeps others', async () => {
   const m = new Map();
   const st = { getItem: k => m.has(k) ? m.get(k) : null, setItem: (k, v) => m.set(k, v) };

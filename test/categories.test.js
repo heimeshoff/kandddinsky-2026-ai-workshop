@@ -46,6 +46,27 @@ test('corrupt storage falls back to empty', () => {
   assert.deepEqual(createCategoryStore(st).list(), []);
 });
 
+test('rename keeps position, trims, allows case change', () => {
+  const s = createCategoryStore(memory());
+  s.add('Fod'); s.add('Rent');
+  assert.deepEqual(s.rename('Fod', '  Food  '), { ok: true, name: 'Food' });
+  assert.deepEqual(s.list(), ['Food', 'Rent']);
+  s.rename('Food', 'FOOD');
+  assert.deepEqual(s.list(), ['FOOD', 'Rent']);
+});
+test('rename rejects duplicates and empty, changes nothing', () => {
+  const st = memory();
+  const s = createCategoryStore(st);
+  s.add('Food'); s.add('Rent');
+  for (const bad of ['food', ' Food ', '', '   ']) {
+    const r = s.rename('Rent', bad);
+    assert.equal(r.ok, false);
+    assert.ok(r.error);
+  }
+  assert.deepEqual(s.list(), ['Food', 'Rent']);
+  s.rename('Rent', 'Rent2');
+  assert.deepEqual(createCategoryStore(st).list(), ['Food', 'Rent2']);
+});
 test('remove deletes the category and survives reload', () => {
   const st = memory();
   const s = createCategoryStore(st);

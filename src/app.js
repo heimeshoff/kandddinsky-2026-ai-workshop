@@ -27,11 +27,34 @@ const catList = document.getElementById('category-list');
 const catInput = document.getElementById('category-input');
 const catError = document.getElementById('category-error');
 
+let renamingCat = null;
+function renameRow(name) {
+  const li = document.createElement('li');
+  const inp = Object.assign(document.createElement('input'), { type: 'text', value: name });
+  inp.setAttribute('aria-label', 'Rename category');
+  const err = document.createElement('span');
+  err.setAttribute('role', 'alert');
+  const save = Object.assign(document.createElement('button'), { type: 'button', textContent: 'Save' });
+  save.addEventListener('click', () => {
+    const r = categories.rename(name, inp.value);
+    if (!r.ok) { err.textContent = r.error; return; }
+    expenses.renameCategory(name, r.name);
+    renamingCat = null; renderExpenses(); renderCategoryOptions();
+  });
+  const cancel = Object.assign(document.createElement('button'), { type: 'button', textContent: 'Cancel' });
+  cancel.addEventListener('click', () => { renamingCat = null; renderCategories(); });
+  li.append(inp, ' ', save, ' ', cancel, ' ', err);
+  return li;
+}
 const renderCategories = () => {
   const avg = expenses.averageByCategory(categories.list());
   catList.replaceChildren(...expenses.spentByCategory(store.month(), categories.list()).map(({ name, cents }, i) => {
     const li = document.createElement('li');
-    li.textContent = `${name}: ${formatEur(cents)} (average ${avg[i].display})`;
+    if (renamingCat === name) return renameRow(name);
+    li.textContent = `${name}: ${formatEur(cents)} (average ${avg[i].display}) `;
+    const btn = Object.assign(document.createElement('button'), { type: 'button', textContent: 'Rename' });
+    btn.addEventListener('click', () => { renamingCat = name; renderCategories(); });
+    li.append(btn);
     const del = document.createElement('button');
     del.type = 'button';
     del.textContent = 'Delete';

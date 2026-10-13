@@ -19,6 +19,19 @@ export function createCategoryStore(storage) {
       storage.setItem(KEY, JSON.stringify([...list, clean]));
       return { ok: true };
     },
+    // Renames in place (keeps order). Own name may change case only. Returns the new name on success.
+    rename(oldName, newName) {
+      const clean = String(newName ?? '').trim();
+      if (clean === '') return { ok: false, error: 'Enter a category name.' };
+      const list = load();
+      const at = list.indexOf(oldName);
+      if (at < 0) return { ok: false, error: 'Category not found.' };
+      if (list.some((c, i) => i !== at && c.toLowerCase() === clean.toLowerCase()))
+        return { ok: false, error: `Category "${clean}" already exists.` };
+      list[at] = clean;
+      storage.setItem(KEY, JSON.stringify(list));
+      return { ok: true, name: clean };
+    },
     remove(name) {
       const list = load();
       if (!list.includes(name)) return { ok: false };
