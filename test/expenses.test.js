@@ -140,3 +140,47 @@ test('own income month starts the past months', () => {
   const s = mk(st); food(s, '2026-09-10', '60');
   assert.equal(s.averageByCategory(['Food'])[0].display, '30.00 €');
 });
+
+// projected balance
+const add = (s, date, amount, category) => s.add({ amount, category, date });
+const rich = () => {
+  const s = mk();
+  add(s, '2026-07-10', '300', 'Food'); add(s, '2026-08-10', '0.01', 'Food'); add(s, '2026-09-10', '329.99', 'Food');
+  add(s, '2026-07-01', '800', 'Rent'); add(s, '2026-08-01', '800', 'Rent'); add(s, '2026-09-01', '800', 'Rent');
+  return s;
+};
+test('projected balance: income - spent - expected rest', () => {
+  const s = rich();
+  add(s, '2026-10-05', '150', 'Food'); add(s, '2026-10-01', '800', 'Rent');
+  const p = s.balance('2026-10', ['Food', 'Rent'], 250000);
+  assert.deepEqual(p, { kind: 'projected', cents: 149000, display: '1,490.00 €' });
+});
+test('spent above average adds no expected rest', () => {
+  const s = rich(); add(s, '2026-10-05', '500', 'Food');
+  assert.equal(s.balance('2026-10', ['Food', 'Rent'], 250000).cents, 250000 - 50000 - 80000);
+});
+test('no past months: income - spent', () => {
+  const s = mk(); add(s, '2026-10-05', '100', 'Food');
+  assert.equal(s.balance('2026-10', ['Food'], 250000).cents, 240000);
+});
+test('negative projected balance is flagged', () => {
+  const s = rich();
+  const p = s.balance('2026-10', ['Food', 'Rent'], 100000);
+  assert.equal(p.cents, -1000);
+  assert.equal(p.negative, true);
+  assert.equal(p.display, '-10.00 €');
+});
+test('past month shows left = income - spent', () => {
+  const s = rich();
+  assert.deepEqual(s.balance('2026-09', ['Food', 'Rent'], 200000), { kind: 'left', cents: 87001, display: '870.01 €' });
+});
+test('future month shows dash', () => {
+  assert.deepEqual(rich().balance('2026-11', ['Food'], 250000), { kind: 'none', cents: null, display: '–' });
+});
+test('balance updates after new expense', () => {
+  const s = rich(); const before = s.balance('2026-10', ['Food', 'Rent'], 250000).cents;
+  add(s, '2026-10-05', '10', 'Food');
+  assert.equal(s.balance('2026-10', ['Food', 'Rent'], 250000).cents, before);
+  add(s, '2026-10-06', '10', 'Other');
+  assert.equal(s.balance('2026-10', ['Food', 'Rent', 'Other'], 250000).cents, before - 1000);
+});

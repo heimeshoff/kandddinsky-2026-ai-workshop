@@ -72,6 +72,22 @@ export function createExpenseStore(storage, today = new Date()) {
         return { name, cents, display: formatEur(Math.round(cents)) };
       });
     },
+    // Current month: projected balance = income - spent - expected rest. Past month: left = income - spent.
+    // Future month: "–". Expected rest per category = max(0, average - spent this month).
+    balance(month, names, incomeCents) {
+      const current = isoDate(today).slice(0, 7);
+      if (month > current) return { kind: 'none', cents: null, display: '–' };
+      const spent = this.spentCents(month);
+      let rest = 0;
+      if (month === current) {
+        const avg = this.averageByCategory(names);
+        const by = this.spentByCategory(month, names);
+        rest = names.reduce((s, _, i) => s + (avg[i].cents === null ? 0 : Math.max(0, avg[i].cents - by[i].cents)), 0);
+      }
+      const cents = Math.round(incomeCents - spent - rest);
+      const display = (cents < 0 ? '-' : '') + formatEur(Math.abs(cents));
+      return { kind: month === current ? 'projected' : 'left', cents, display, ...(cents < 0 && { negative: true }) };
+    },
     spentCents: (month) => inMonth(month).reduce((s, e) => s + e.cents, 0),
   };
 }

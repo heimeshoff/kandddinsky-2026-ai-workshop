@@ -58,6 +58,12 @@ function renderExpenses() {
   const month = store.month();
   spent.textContent = formatEur(expenses.spentCents(month));
   renderCategories();
+  const b = expenses.balance(month, categories.list(), store.cents());
+  document.getElementById('balance-label').textContent = b.kind === 'left' ? 'Left' : 'Projected balance';
+  const bEl = document.getElementById('balance');
+  bEl.textContent = b.display;
+  bEl.style.color = b.negative ? 'red' : '';
+  bEl.style.fontWeight = b.negative ? 'bold' : '';
   expList.replaceChildren(...expenses.list(month).map((e, i) => {
     const li = document.createElement('li');
     li.textContent = `${formatEur(e.cents)} ${e.category} ${e.date}${e.note ? ' ' + e.note : ''}`;
